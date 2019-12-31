@@ -60,12 +60,13 @@ namespace RandomNumberGenerator {
 		/// the contents of this method with the code editor.
 		/// </summary>
 
-		//Initialize variables for the layout of buttons
-		int height = 250;
-		int length = 900;
-
 		void InitializeComponent(void)
 		{
+		
+			//Initialize variables for the layout of buttons
+			int height = 250;
+			int length = 900;
+		
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->label3 = (gcnew System::Windows::Forms::Label());
