@@ -13,9 +13,10 @@ public:
 	int dur; //duration of song in seconds
 };
 
-void chgSong(Windows::Forms::Label^ nameLabel, Windows::Forms::Label^ artistLabel, music song) {
+void chgSong(Windows::Forms::Label^ nameLabel, Windows::Forms::Label^ artistLabel, Windows::Forms::ProgressBar^ prog, music song) {
 	String^ name = gcnew String(song.sName.c_str()); //converts to proper string type
 	String^ artist = gcnew String(song.sArtist.c_str());
 	nameLabel->Text = name;
 	artistLabel->Text = artist;
+	prog->Maximum = song.dur;
 };
