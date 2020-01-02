@@ -2,9 +2,9 @@
 #include"music.h"
 
 const int numSongs = 4;
-int curSong = -1;
+int curSong = 0;
 music songs[numSongs]; //array of music objects
-
+bool playing = false;
 
 namespace MusicApp {
 
@@ -16,7 +16,7 @@ namespace MusicApp {
 	using namespace System::Drawing;
 
 	/// <summary>
-	/// Summary for Player
+	/// Summary for progtest
 	/// </summary>
 	public ref class Player : public System::Windows::Forms::Form
 	{
@@ -40,22 +40,22 @@ namespace MusicApp {
 				delete components;
 			}
 		}
-		//define the form components and names
+	private: System::Windows::Forms::ProgressBar^  progress;
+	protected:
+	private: System::ComponentModel::IContainer^  components;
 	private: System::Windows::Forms::Button^  nextButton;
 	private: System::Windows::Forms::Button^  prevButton;
 	private: System::Windows::Forms::Button^  playButton;
 	private: System::Windows::Forms::Label^  songTitle;
 	private: System::Windows::Forms::Label^  songArtist;
+	private: System::Windows::Forms::Timer^  timer;
 	private: System::Windows::Forms::PictureBox^  SongImage;
-	protected:
-
-	protected:
 
 	private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -64,36 +64,45 @@ namespace MusicApp {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			// ------------------------------------------------------------------------------
 			int width = 400;
 			int height = 600;
-			int numS = 4; //number of songs
-
 			songs[0].sName = "Selling Flowers";
 			songs[0].sArtist = "Slow Hollows";
+			songs[0].dur = 10;
 			songs[1].sName = "Everything Now";
 			songs[1].sArtist = "Arcade Fire";
+			songs[1].dur = 5;
 			songs[2].sName = "Shiver";
 			songs[2].sArtist = "Lucy Rose";
+			songs[2].dur = 20;
 			songs[3].sName = "Bloom";
 			songs[3].sArtist = "Paper Kites";
+			songs[3].dur = 10;
 
-			// ------------------------------------------------------------------------------
+			this->components = (gcnew System::ComponentModel::Container());
+			this->progress = (gcnew System::Windows::Forms::ProgressBar());
 			this->nextButton = (gcnew System::Windows::Forms::Button());
 			this->prevButton = (gcnew System::Windows::Forms::Button());
 			this->playButton = (gcnew System::Windows::Forms::Button());
 			this->songTitle = (gcnew System::Windows::Forms::Label());
 			this->songArtist = (gcnew System::Windows::Forms::Label());
 			this->SongImage = (gcnew System::Windows::Forms::PictureBox());
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SongImage))->BeginInit();
+			this->timer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->SuspendLayout();
-
+			// 
+			// Progress 
+			//
+			int progSize = 300;
+			this->progress->Location = System::Drawing::Point(width / 2 - progSize / 2, 3 * height / 4 - 60);
+			this->progress->Name = L"progress";
+			this->progress->Size = System::Drawing::Size(progSize, 20);
+			this->progress->TabIndex = 0;
 			// 
 			// nextButton
 			//
 			int pbSize = 50;
 			this->nextButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->nextButton->Location = System::Drawing::Point(3*width/4 -pbSize/2, 3 * height / 4);
+			this->nextButton->Location = System::Drawing::Point(3 * width / 4 - pbSize / 2, 3 * height / 4);
 			this->nextButton->Name = L"nextButton";
 			this->nextButton->Size = System::Drawing::Size(pbSize, pbSize);
 			this->nextButton->TabIndex = 1;
@@ -104,7 +113,7 @@ namespace MusicApp {
 			// prevButton
 			//
 			this->prevButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->prevButton->Location = System::Drawing::Point(width/4 - pbSize/2, 3 * height / 4);
+			this->prevButton->Location = System::Drawing::Point(width / 4 - pbSize / 2, 3 * height / 4);
 			this->prevButton->Name = L"prevButton";
 			this->prevButton->Size = System::Drawing::Size(pbSize, pbSize);
 			this->prevButton->TabIndex = 1;
@@ -120,7 +129,7 @@ namespace MusicApp {
 			this->playButton->Name = L"playButton";
 			this->playButton->Size = System::Drawing::Size(pbSize, pbSize);
 			this->playButton->TabIndex = 1;
-			this->playButton->Text = L" || ";
+			this->playButton->Text = L" |> ";
 			this->playButton->UseVisualStyleBackColor = true;
 			this->playButton->Click += gcnew System::EventHandler(this, &Player::playClick);
 			// 
@@ -141,16 +150,23 @@ namespace MusicApp {
 			this->songArtist->TabIndex = 2;
 			this->songArtist->Text = L"Artist goes here I suppose";
 			this->songArtist->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
+
+			chgSong(songTitle, songArtist, progress, songs[curSong]);
 			// 
 			// SongImage
-			// 
+			//
 			this->SongImage->Location = System::Drawing::Point(81, 30);
 			this->SongImage->Name = L"SongImage";
 			this->SongImage->Size = System::Drawing::Size(220, 220);
 			this->SongImage->TabIndex = 0;
 			this->SongImage->TabStop = false;
 			// 
-			// Player
+			// Timer
+			// 
+			this->timer->Tick += gcnew System::EventHandler(this, &Player::timer_Tick);
+			this->timer->Interval = 1000; //set 1 second as the incrementation time
+			// 
+			// progtest
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
@@ -161,19 +177,30 @@ namespace MusicApp {
 			this->Controls->Add(this->prevButton);
 			this->Controls->Add(this->playButton);
 			this->Controls->Add(this->SongImage);
-			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle; //prevents user from scaling window
-			this->Name = L"Player";
-			this->Text = L"Music Player";
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SongImage))->EndInit();
+			this->Controls->Add(this->progress);
+			this->Name = L"progtest";
+			this->Text = L"progtest";
 			this->ResumeLayout(false);
-			this->PerformLayout();
 
 		}
 #pragma endregion
+	private: System::Void playClick(System::Object^  sender, System::EventArgs^  e) {
+		if (playing) {
+			this->timer->Stop();
+			playing = false;
+			playButton->Text = L" |> ";
+		}
+		else {
+			this->timer->Start();
+			playing = true;
+			playButton->Text = L" | | ";
+		}
+	}
 	private: System::Void nextClick(System::Object^  sender, System::EventArgs^  e) {
-		curSong++;
-		chgSong(songTitle, songArtist, songs[curSong]);
-		if(curSong > 0)
+		curSong++; //position in queue
+		chgSong(songTitle, songArtist, progress, songs[curSong]); //change song
+		progress->Value = 0;
+		if (curSong > 0)
 			prevButton->Enabled = true;
 		if (curSong >= numSongs - 1) {
 			nextButton->Enabled = false;
@@ -181,14 +208,15 @@ namespace MusicApp {
 		}
 	}
 	private: System::Void prevClick(System::Object^  sender, System::EventArgs^  e) {
-		curSong--;
+		curSong--; //position in queue
 		if (curSong == 0)
 			prevButton->Enabled = false;
-		chgSong(songTitle, songArtist, songs[curSong]);
+		chgSong(songTitle, songArtist, progress, songs[curSong]); //change song
+		progress->Value = 0;
 		nextButton->Enabled = true;
 	}
-	private: System::Void playClick(System::Object^  sender, System::EventArgs^  e) {
-		//
+	private: System::Void timer_Tick(System::Object^  sender, System::EventArgs^  e) {
+		this->progress->Increment(1);
 	}
 	};
 }
