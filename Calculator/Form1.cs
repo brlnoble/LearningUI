@@ -7,6 +7,7 @@
 
 using System;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace Calculator
 {
@@ -24,6 +25,7 @@ namespace Calculator
             InitializeComponent();
         }
         #endregion
+
         #region Clearing Methods
         /// <summary>
         /// Clears the user input text
@@ -163,7 +165,57 @@ namespace Calculator
         /// </summary>
         private void calculateEquation()
         {
+            
+            calculationResultText.Text = ParseOperation();
+            focusInputText();
+        }
 
+        /// <summary>
+        /// Parses the user's input equation, determining the result
+        /// </summary>
+        /// <returns></returns>
+        private string ParseOperation()
+        {
+            try //catch exceptions to inform user rather than crashing the program
+            {
+                var input = userInputText.Text; //get user's input equation
+
+                //Remove all spaces in equation
+                input = input.Replace(" ", "");
+
+                var operation = new Operation();
+                var leftSide = true;
+
+                for(int i=0; i<input.Length; i++) //loop through each character in input, from left to right
+                {
+                    //TO DO: HANDLE ORDER PRIORITY TO FOLLOW BEDMAS
+                    if("0123456789.".Any(c => input[i] == c)) //check if current character is a number
+                    {
+                        if(leftSide)
+                        {
+                            operation.leftSide = AddNumberPart(operation.leftSide, input[i]);
+                        }
+                    }
+                }
+                return $"Hi";
+            }
+            catch (Exception ex)
+            {
+                return $"Invalid equation. {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Attempts to add a new character to current number, checking for invalids
+        /// </summary>
+        /// <param name="currentNumber">The current number string</param>
+        /// <param name="currentCharacter">New character to append</param>
+        /// <returns></returns>
+        private string AddNumberPart(string currentNumber, char newCharacter)
+        {
+            if(newCharacter == '.' && currentNumber.Contains('.'))
+                throw new InvalidOperationException($"Number {currentNumber} contains multiple .'s");
+            return currentNumber + newCharacter;
         }
 
         #region Private Helpers
